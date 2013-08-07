@@ -1,0 +1,41 @@
+<h1>{{game.title}}</h1>
+<div class="panel form-inline" ng-controller="GameControlPanel">
+	<button
+		class="btn"
+		ng-disabled="game.state !== 'active'"
+		ng-class="{
+			'btn-warning active': (game|isPlaying),
+			'btn-primary': !(game|isPlaying)
+		}"
+		ng-click="(game|isPlaying) ? game.stop() : game.start()"
+	>
+		<i
+			class="glyphicon"
+			ng-class="{
+				'glyphicon-pause': (game|isPlaying),
+				'glyphicon-play': !(game|isPlaying)
+			}"
+		></i>
+	</button>
+	<label>
+		Game state:
+		<select
+			class="form-control"
+			style="width: 150px"
+			ng-model="game.state"
+			ng-options="(state|inflector:'humanize') for state in Game.states"
+		></select>
+	</label>
+	<button class="pull-right btn btn-danger" ng-click="Games.remove(game)">
+		<i class="glyphicon glyphicon-trash"></i>
+	</button>
+</div>
+
+
+<table class="table table-hover table-condensed">
+	<tr ng-repeat="session in (game.sessions|orderBy:'-start')">
+		<td>{{ session.start|date:"MMM d, y HH:mm" }}</td>
+		<td>{{ (session.stop?session.stop:undefined)|date:"MMM d, y HH:mm" }}</td>
+		<td>{{ ((session.stop||timeNow)-session.start)|duration }}</td>
+	</tr>
+</table>
