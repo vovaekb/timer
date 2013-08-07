@@ -32,7 +32,7 @@ define(function () {
 		});
 	})
 	.factory("Games", function (Game, Util) {
-		var data = JSON.parse(localStorage.getItem("gamesLog"));
+		var data = JSON.parse(localStorage.getItem("gamesLog")) || [];
 		var Games = {};
 		return angular.extend(Games, {
 			data: data,
