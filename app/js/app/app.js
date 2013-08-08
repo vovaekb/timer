@@ -68,10 +68,10 @@ define(function () {
 			cleanData: (function (data) {
 				this.data.splice(0, this.data.length);
 			}).bind(Games),
-			pagination: {
+			pages: {
 				offset: 0,
-				amount: 20,
-				amounts: [10,25,50,100]
+				amount: 25,
+				amounts: [25, 50, 100]
 			}
 		});
 	})
@@ -194,6 +194,11 @@ define(function () {
 			.reduce(Util.sum, 0);
 		};
 	})
+	.filter("state", function ($filter) {
+		return function (games, state) {
+			return $filter("filter")(games, state ? {state: state} : undefined);
+		};
+	})
 	.filter("duration", function (Util) {
 		return function (value) {
 			if (value <= 0) return undefined;
@@ -227,7 +232,7 @@ define(function () {
 		return function (array, amount, offset) {
 			return Util
 			.range(Math.ceil(array.length / amount))
-			.map(Util.mult.bind(null, amount))
+			.map(Util.sum.bind(this, 1));
 		};
 	})
 	.controller("Game", function ($scope, $stateParams, $state, $q, $timeout, Games, Game) {
@@ -246,8 +251,70 @@ define(function () {
 			$timeout(updateNow, 10000);
 		})();
 	})
-	.controller("Games", function ($scope) {
+	.controller("Pagination", function ($scope, Games, $filter, Util) {
+		var nearPagesAmount = 5,
+			nearOffset = ~~(nearPagesAmount / 2);
 
+		$scope.currentPage = function () {
+			var offset = Games.pages.offset,
+				amount = Games.pages.amount;
+
+			return $scope.pages.indexOf(offset / amount) + 1;
+		};
+
+		$scope.nearPages = function () {
+			var current = $scope.currentPage(),
+				pagesBefore = current,
+				isInStart = current < (nearPagesAmount - 1),
+				isInEnd = current > ($scope.pages.length - nearPagesAmount),
+				pagesAfter = $scope.pages.length - current - 1,
+				offsetBefore = nearOffset,
+				offsetAfter = nearPagesAmount - offsetBefore;
+
+			if ($scope.pages.length <= (nearPagesAmount + 1)) return $scope.pages;
+
+			if (isInStart) {
+				offsetBefore = ((pagesBefore - 1) <= nearOffset) ? pagesBefore : nearOffset;
+				offsetAfter = nearPagesAmount - (offsetBefore);
+			} else
+			if (isInEnd) {
+				offsetAfter = (pagesAfter > (nearOffset + 1)) ? nearOffset : pagesAfter + 1;
+				offsetBefore = nearPagesAmount - offsetAfter;
+			}
+			$scope.debug = {
+				page: current+1,
+				isInStart: isInStart,
+				isInEnd: isInEnd,
+				pagesBefore: pagesBefore,
+				pagesAfter: pagesAfter,
+				offsetBefore: offsetBefore,
+				offsetAfter: offsetAfter,
+				start: current - offsetBefore,
+				stop: current + offsetAfter,
+				diff: offsetBefore + offsetAfter
+			};
+			return $scope.pages.slice(current - offsetBefore, current + offsetAfter);
+		};
+		$scope.changePage = function (page) {
+			Games.pages.offset = ((page - 1) * Games.pages.amount);
+			console.log("Page: ", Games.pages.offset / Games.pages.amount, $scope.pages.length);
+		};
+	})
+	.controller("Games", function ($scope) {
+		Object.defineProperties($scope, {
+			pages: {
+				get: function () {
+					return $scope.$eval("Games.data|state:$state.params.state|pages:Games.pages.amount:Games.pages.offset");
+				},
+				set: angular.noop
+			},
+			games: {
+				get: function () {
+					return $scope.$eval("(Games.data|orderBy:'-(sessions|last).start'|state:$state.params.state|paginate:Games.pages.offset:Games.pages.amount)");
+				},
+				set: angular.noop
+			}
+		});
 	})
 	.controller("GamesAdder", function ($scope, Games) {
 

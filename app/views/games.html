@@ -1,7 +1,9 @@
-<pre>Duration: {{ Games.data|filter:{state:Games.showState}|sumGamesDuration|duration }}
+<pre>Duration: {{ Games.data|state:$state.params.state|sumGamesDuration|duration }}
 Games: {{ (Games.data|filter:{state:Games.showState}).length }}
-{{$state}}
-Pages: {{Games.data|pages:Games.pagination.amount:Games.pagination.offset}}
+
+State: {{$state|json}}
+
+Pages: {{(Games.data|pages:Games.pages.amount:Games.pages.offset).length}}
 </pre>
 
 <div>
@@ -19,22 +21,33 @@ Pages: {{Games.data|pages:Games.pagination.amount:Games.pagination.offset}}
 		>{{state|inflector:"humanize"}}</a>
 	</div>
 </div>
-
-<nav class="pagination">
-	<li
-		ng-repeat="page in (Games.data|pages:Games.pagination.amount:Games.pagination.offset|limitTo:3)"
-		ng-class="{active: Games.pagination.offset == page}"
-	>
-		<a ng-click="Games.pagination.offset = page">
-			{{(page / Games.pagination.amount) + 1}}
-		</a>
+<nav 
+	ng-controller="Pagination"
+	class="pagination"
+>
+	<li ng-if="(nearPages()[0]>1) && (pages.length > 6)" ng-class="{active: (currentPage() + 1) == page}">
+		<a href ng-click="changePage(1)">1</a>
 	</li>
-	<li ng-repeat="page in ((Games.data|pages:Games.pagination.amount:Games.pagination.offset).reverse()|limitTo:3)">
-		<a
-			ng-click="Games.pagination.offset = page"
-		>
-			{{(page / Games.pagination.amount) + 1}}
-		</a>
+	<li ng-if="(nearPages()[0]>1) && (pages.length > 6)"><span>...</span></li>
+
+	<li ng-repeat="page in nearPages()" ng-class="{active: (currentPage() + 1) == page}">
+		<a href ng-click="changePage(page)">{{page}}</a>
+	</li>
+
+	<li ng-if="((nearPages()|last) !== pages.length) && (pages.length > 6)"><span>...</span></li>
+	<li
+		ng-if="((nearPages()|last) !== pages.length) && (pages.length > 6)"
+		ng-class="{active: (currentPage() + 1) == page}"
+	>
+		<a href ng-click="changePage((pages|last))">{{pages|last}}</a>
+	</li>
+</nav>
+<nav class="pagination pull-right">
+	<li
+		ng-repeat="amount in Games.pages.amounts"
+		ng-class="{active: amount == Games.pages.amount}"
+	>
+		<a href ng-click="Games.pages.amount = amount">{{amount}}</a>
 	</li>
 </nav>
 
@@ -42,7 +55,7 @@ Pages: {{Games.data|pages:Games.pagination.amount:Games.pagination.offset}}
 	<a
 		ui-sref="game({gameID:game.id})"
 		class="list-group-item"
-		ng-repeat="game in (Games.data|orderBy:'-(sessions|last).start'|filter:($state.params.state?{state: $state.params.state}:undefined)|paginate:Games.pagination.offset:Games.pagination.amount)"
+		ng-repeat="game in games"
 	>
 		<i
 			class="glyphicon"
