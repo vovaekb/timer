@@ -1,8 +1,8 @@
 <header ng-controller="Navigation" class="navbar">
 	<a class="navbar-brand" href="#/index">Timer</a>
 	<nav class="nav navbar-nav">
-		<li ng-class="{active: $state.is('games') || $state.is('games.state')}">
-			<a ui-sref="games">Games</a>
+		<li ng-class="{active: $state.includes('games')}">
+			<a ui-sref="games.state({state: 'active', offset: 0, limit: Games.pages.limit})">Games</a>
 		</li>
 		<li ng-class="{active: $state.is('settings')}">
 			<a ui-sref="settings">Settings</a>

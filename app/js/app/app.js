@@ -18,12 +18,13 @@ define(function () {
 			templateUrl: "views/settings.html"
 		})
 		.state("games", {
+			abstract: true,
 			url: "/games",
 			templateUrl: "views/games.html",
 			controller: "Games"
 		})
 		.state("games.state", {
-			url: "/{state:active|finished|dropped|hold|wish}?offset&amount"
+			url: "/{state:all|active|finished|dropped|hold|wish}?offset&limit"
 		})
 		.state("game", {
 			url: "/games/{gameID}",
@@ -31,7 +32,7 @@ define(function () {
 			controller: "Game"
 		});
 	})
-	.factory("Games", function (Game, Util) {
+	.factory("Games", function (Game, Util, $state) {
 		var data = JSON.parse(localStorage.getItem("gamesLog")) || [];
 		var Games = {};
 		return angular.extend(Games, {
@@ -69,9 +70,9 @@ define(function () {
 				this.data.splice(0, this.data.length);
 			}).bind(Games),
 			pages: {
-				offset: 0,
-				amount: 25,
-				amounts: [25, 50, 100]
+				offset: $state.params.offset || 0,
+				limit: $state.params.limit || 25,
+				limits: [25, 50, 100]
 			}
 		});
 	})
@@ -196,7 +197,7 @@ define(function () {
 	})
 	.filter("state", function ($filter) {
 		return function (games, state) {
-			return $filter("filter")(games, state ? {state: state} : undefined);
+			return $filter("filter")(games, (state !== "all") ? {state: state} : undefined);
 		};
 	})
 	.filter("duration", function (Util) {
@@ -224,14 +225,14 @@ define(function () {
 		};
 	})
 	.filter("paginate", function () {
-		return function (array, offset, amount) {
-			return array.slice(offset, offset + amount);
+		return function (array, offset, limit) {
+			return array.slice(offset, offset + limit);
 		};
 	})
 	.filter("pages", function (Util) {
-		return function (array, amount, offset) {
+		return function (array, limit, offset) {
 			return Util
-			.range(Math.ceil(array.length / amount))
+			.range(Math.ceil(array.length / limit))
 			.map(Util.sum.bind(this, 1));
 		};
 	})
@@ -251,15 +252,15 @@ define(function () {
 			$timeout(updateNow, 10000);
 		})();
 	})
-	.controller("Pagination", function ($scope, Games, $filter, Util) {
+	.controller("Pagination", function ($scope, $state, Games, $filter, Util) {
 		var nearPagesAmount = 5,
 			nearOffset = ~~(nearPagesAmount / 2);
 
 		$scope.currentPage = function () {
-			var offset = Games.pages.offset,
-				amount = Games.pages.amount;
+			var offset = $state.params.offset,
+				limit = $state.params.limit;
 
-			return $scope.pages.indexOf(offset / amount) + 1;
+			return $scope.pages.indexOf(offset / limit) + 1;
 		};
 
 		$scope.nearPages = function () {
@@ -281,36 +282,26 @@ define(function () {
 				offsetAfter = (pagesAfter > (nearOffset + 1)) ? nearOffset : pagesAfter + 1;
 				offsetBefore = nearPagesAmount - offsetAfter;
 			}
-			$scope.debug = {
-				page: current+1,
-				isInStart: isInStart,
-				isInEnd: isInEnd,
-				pagesBefore: pagesBefore,
-				pagesAfter: pagesAfter,
-				offsetBefore: offsetBefore,
-				offsetAfter: offsetAfter,
-				start: current - offsetBefore,
-				stop: current + offsetAfter,
-				diff: offsetBefore + offsetAfter
-			};
+
 			return $scope.pages.slice(current - offsetBefore, current + offsetAfter);
 		};
+
 		$scope.changePage = function (page) {
-			Games.pages.offset = ((page - 1) * Games.pages.amount);
-			console.log("Page: ", Games.pages.offset / Games.pages.amount, $scope.pages.length);
+			$state.params.offset = ((page - 1) * $state.params.limit);
+			console.log("Page: ", $state.params.offset / $state.params.limit, $scope.pages.length);
 		};
 	})
 	.controller("Games", function ($scope) {
 		Object.defineProperties($scope, {
 			pages: {
 				get: function () {
-					return $scope.$eval("Games.data|state:$state.params.state|pages:Games.pages.amount:Games.pages.offset");
+					return $scope.$eval("Games.data|state:$state.params.state|pages:$state.params.limit:$state.params.offset");
 				},
 				set: angular.noop
 			},
 			games: {
 				get: function () {
-					return $scope.$eval("(Games.data|orderBy:'-(sessions|last).start'|state:$state.params.state|paginate:Games.pages.offset:Games.pages.amount)");
+					return $scope.$eval("(Games.data|orderBy:'-(sessions|last).start'|state:$state.params.state|paginate:$state.params.offset:$state.params.limit)");
 				},
 				set: angular.noop
 			}

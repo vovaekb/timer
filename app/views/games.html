@@ -1,55 +1,71 @@
 <pre>Duration: {{ Games.data|state:$state.params.state|sumGamesDuration|duration }}
-Games: {{ (Games.data|filter:{state:Games.showState}).length }}
+Games: {{ (Games.data|state:$state.params.state).length }}
 
 State: {{$state|json}}
+{{state}}
 
-Pages: {{(Games.data|pages:Games.pages.amount:Games.pages.offset).length}}
+Pages: {{Games.pages|json}}
 </pre>
 
 <div>
 	<div class="btn-group">
 		<a
-			ui-sref="games"
+			ui-sref="games.state({state: 'all', offset: 0, limit: $state.params.limit})"
 			class="btn btn-default"
-			ng-class="{active: !$state.params.state}"
+			ng-class="{active: $state.params.state == 'all'}"
 		>All</a>
 		<a
-			ui-sref="games.state({state:state})"
+			ui-sref="games.state({state:state, offset: 0, limit: $state.params.limit})"
 			class="btn btn-default"
 			ng-class="{active: $state.params.state == state}"
 			ng-repeat="state in Game.states"
 		>{{state|inflector:"humanize"}}</a>
 	</div>
 </div>
-<nav 
-	ng-controller="Pagination"
-	class="pagination"
->
-	<li ng-if="(nearPages()[0]>1) && (pages.length > 6)" ng-class="{active: (currentPage() + 1) == page}">
-		<a href ng-click="changePage(1)">1</a>
-	</li>
-	<li ng-if="(nearPages()[0]>1) && (pages.length > 6)"><span>...</span></li>
 
-	<li ng-repeat="page in nearPages()" ng-class="{active: (currentPage() + 1) == page}">
-		<a href ng-click="changePage(page)">{{page}}</a>
-	</li>
+<div ng-controller="Pagination" ng-hide="pages.length == 1">
+	<nav class="pagination">
+		<li
+			ng-if="(nearPages()[0]>1) && (pages.length > 6)"
+			ng-class="{active: $state.params.offset == ( (page - 1) * $state.params.limit) }"
+		>
+			<a ui-sref="games.state({state: $state.params.state, limit: $state.params.limit, offset: 0 })">1</a>
+		</li>
+		<li ng-if="(nearPages()[0]>1) && (pages.length > 6)">
+			<span>...</span>
+		</li>
 
-	<li ng-if="((nearPages()|last) !== pages.length) && (pages.length > 6)"><span>...</span></li>
-	<li
-		ng-if="((nearPages()|last) !== pages.length) && (pages.length > 6)"
-		ng-class="{active: (currentPage() + 1) == page}"
-	>
-		<a href ng-click="changePage((pages|last))">{{pages|last}}</a>
-	</li>
-</nav>
-<nav class="pagination pull-right">
-	<li
-		ng-repeat="amount in Games.pages.amounts"
-		ng-class="{active: amount == Games.pages.amount}"
-	>
-		<a href ng-click="Games.pages.amount = amount">{{amount}}</a>
-	</li>
-</nav>
+		<li
+			ng-repeat="page in nearPages()"
+			ng-class="{active: $state.params.offset == ( (page - 1) * $state.params.limit) }"
+		>
+			<a
+				ui-sref="games.state({state: $state.params.state, limit: $state.params.limit, offset: (page - 1) * $state.params.limit })"
+			>{{page}}</a>
+		</li>
+
+		<li ng-if="((nearPages()|last) !== pages.length) && (pages.length > 6)">
+			<span>...</span>
+		</li>
+		<li
+			ng-if="((nearPages()|last) !== pages.length) && (pages.length > 6)"
+			ng-class="{active: $state.params.offset == ( (page - 1) * $state.params.limit) }"
+		>
+			<a ui-sref="games.state({state: $state.params.state, limit: $state.params.limit, offset: ((pages|last) - 2) * $state.params.limit })">{{pages|last}}</a>
+		</li>
+	</nav>
+
+	<nav class="pagination pull-right">
+		<li
+			ng-repeat="limit in Games.pages.limits"
+			ng-class="{active: limit == $state.params.limit}"
+		>
+			<a
+				ui-sref="games.state({state: $state.params.state, limit: limit, offset: $state.params.offset})"
+			>{{limit}}</a>
+		</li>
+	</nav>
+</div>
 
 <nav class="list-group">
 	<a
