@@ -27,6 +27,7 @@ State: {{$state|json}}
 	>
 		<a
 			ui-sref="games.state({state: $state.params.state, limit: $state.params.limit, offset: Paginator.calcOffset($state.params.limit, page) })"
+			title="{{ (page - 1) * $state.params.limit }}"
 			ng-if="page>0"
 		>{{page}}</a>
 		<span ng-if="page<0">...</span>
