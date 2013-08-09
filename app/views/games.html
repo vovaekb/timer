@@ -49,7 +49,7 @@ State: {{$state|json}}
 	<a
 		ui-sref="game({gameID:game.id})"
 		class="list-group-item"
-		ng-repeat="game in (Games.data|state:$state.params.state|page:$state.params.limit:$state.params.offset)"
+		ng-repeat="game in (Games.data|state:$state.params.state|orderBy:'-(sessions|last).start'|page:$state.params.limit:$state.params.offset)"
 	>
 		<i
 			class="glyphicon"
