@@ -142,8 +142,8 @@ define(function () {
 			range: function (amount, offset) {
 				return Array(amount)
 				.join(".").split(".")
-				.map(function (val, i) {
-					return i + (offset || 0);
+				.map(function (value, index) {
+					return index + (offset || 0);
 				});
 			}
 		};
@@ -182,7 +182,7 @@ define(function () {
 		return function (sessions) {
 			return sessions
 			.map(function (session) {
-				var diff = (session.stop||Date.now()) - session.start;
+				var diff = (session.stop || Date.now()) - session.start;
 				return diff > 0 ? diff: 0;
 			})
 			.reduce(Util.sum, 0);
@@ -200,7 +200,7 @@ define(function () {
 	})
 	.filter("state", function ($filter) {
 		return function (games, state) {
-			return $filter("filter")(games, (state !== "all") ? {state: state} : undefined);
+			return $filter("filter")(games, state !== "all" ? {state: state} : undefined);
 		};
 	})
 	.filter("duration", function (Util) {
@@ -234,7 +234,7 @@ define(function () {
 			.map(Util.sum.bind(this, 1));
 		};
 	})
-	.controller("Game", function ($scope, $stateParams, $state, $q, $timeout, Games, Game) {
+	.controller("Game", function ($scope, $stateParams, $state, $timeout, Games, Game) {
 		var leavePage = function (isRemoved) {
 			if (isRemoved) $state.transitionTo("games");
 		};
@@ -264,38 +264,33 @@ define(function () {
 			calcOffset: function (limit, page) {
 				return (page - 1) * limit;
 			},
-			generatePagination: ((function (pages, page) {
-				var half = ~~ (this.caret / 2),
-					caret = this.caret;
+			generatePagination: (function (pages, page) {
+				var caret = this.caret,
+					side = ~~ (caret / 2);
 
 				return pages
 				.map(function (value, index, array) {
-					if (value === 1 || value === array.length) {
-						return value;
-					}
-					if (
-						(value <= caret && page <= caret - half) ||
-						(index + caret >= array.length && page + half >= array.length)
-					) {
-						return value;
-					}
-					if (page - half <= value && value <= page + half) {
+					var isAlwaysVisible = value === 1 || value === array.length,
+						caretCollides =	
+							(value <= caret && page <= caret - side) ||
+							(index + caret >= array.length && page + side >= array.length),
+						isInCaret = page - side <= value && value <= page + side;
+
+					if (isAlwaysVisible || caretCollides || isInCaret) {
 						return value;
 					}
 				})
 				.reduce(function (out, value, index) {
-					if (
-						out.indexOf(value) < 0 ||
-						out.indexOf(value) >= 0 && out[out.length-1] !== value
-					) {
-						out.push(value);
-					}
+					var isUnique = out.indexOf(value) < 0,
+						isNotPrevious = !isUnique && Util.last(out) !== value;
+
+					if (isUnique || isNotPrevious) out.push(value);
 					return out;
 				}, [])
 				.map(function (value, index) {
 					return value ? value : -index;
 				});
-			})).bind(Service),
+			}).bind(Service),
 			paginate: (function (length, limit, offset) {
 				var pages = this.generatePages(length, limit),
 					page = this.calcPage(limit, offset);
