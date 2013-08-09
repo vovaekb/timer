@@ -1,10 +1,11 @@
 define(function () {
 	angular
 	.module("timer", ["ui", "ui.state", "ui.bootstrap"])
-	.run(function ($rootScope, $state, Games, Game) {
+	.run(function ($rootScope, $state, Games, Game, Paginator) {
 		$rootScope.$state = $state;
 		$rootScope.Games = Games;
 		$rootScope.Game = Game;
+		$rootScope.Paginator = Paginator;
 		$rootScope.$watch(Games.watcher, Games.watcherCallback);
 	})
 	.config(function ($stateProvider) {
@@ -141,7 +142,9 @@ define(function () {
 			range: function (amount, offset) {
 				return Array(amount)
 				.join(".").split(".")
-				.map(function (val, i) {return i + (offset || 0) });
+				.map(function (val, i) {
+					return i + (offset || 0);
+				});
 			}
 		};
 	})
@@ -195,10 +198,10 @@ define(function () {
 			.reduce(Util.sum, 0);
 		};
 	})
-	.filter("state", function ($filter) {
-		return function (games, state) {
+	.filter("state", function ($filter, Util) {
+		return Util.memoize(function (games, state) {
 			return $filter("filter")(games, (state !== "all") ? {state: state} : undefined);
-		};
+		});
 	})
 	.filter("duration", function (Util) {
 		return function (value) {
@@ -224,11 +227,6 @@ define(function () {
 			return game.sessions[game.sessions.length - 1].stop === 0;
 		};
 	})
-	.filter("paginate", function () {
-		return function (array, offset, limit) {
-			return array.slice(offset, offset + limit);
-		};
-	})
 	.filter("pages", function (Util) {
 		return function (array, limit, offset) {
 			return Util
@@ -252,43 +250,71 @@ define(function () {
 			$timeout(updateNow, 10000);
 		})();
 	})
-	.controller("Pagination", function ($scope, $state, Games, $filter, Util) {
-		var nearPagesAmount = 5,
-			nearOffset = ~~(nearPagesAmount / 2);
+	.factory("Paginator", function (Util) {
+		var Service = {};
+		return angular.extend(Service, {
+			generatePages: Util.memoize(function (length, limit) {
+				return Util
+				.range(Math.ceil(length / limit))
+				.map(Util.sum.bind(null, 1));
+			}),
+			calcPage: Util.memoize(function (limit, offset) {
+				return Math.ceil(offset / limit) + 1;
+			}).bind(Service),
+			calcOffset: Util.memoize(function (limit, page) {
+				return (page - 1) * limit;
+			}).bind(Service),
+			generatePagination: (Util.memoize(function (pages, page) {
+				var half = ~~ (this.caret / 2),
+					caret = this.caret;
 
-		$scope.currentPage = function () {
-			var offset = $state.params.offset,
-				limit = $state.params.limit;
+				return pages
+				.map(function (value, index, array) {
+					if (value === 1 || value === array.length) {
+						return value;
+					}
+					if (
+						(value <= caret && page <= caret - half) ||
+						(index + caret >= array.length && page + half >= array.length)
+					) {
+						return value;
+					}
+					if (page - half <= value && value <= page + half) {
+						return value;
+					}
+				})
+				.reduce(function (out, value, index) {
+					if (
+						out.indexOf(value) < 0 ||
+						out.indexOf(value) >= 0 && out[out.length-1] !== value
+					) {
+						out.push(value);
+					}
+					return out;
+				}, [])
+				.map(function (value, index) {
+					return value ? value : -index;
+				});
+			})).bind(Service),
+			paginate: Util.memoize(function (length, limit, offset) {
+				var pages = this.generatePages(length, limit),
+					page = this.calcPage(limit, offset);
 
-			return $scope.pages.indexOf(offset / limit) + 1;
+				return this.generatePagination(pages, page);
+			}).bind(Service),
+			caret: 5,
+			limitDefault: 25,
+			limits: [25, 50, 100]
+		});
+	})
+	.filter("page", function () {
+		return function (data, limit, offset) {
+			return data.slice(offset, ~~offset + ~~limit);
 		};
-
-		$scope.nearPages = function () {
-			var current = $scope.currentPage(),
-				pagesBefore = current,
-				isInStart = current < (nearPagesAmount - 1),
-				isInEnd = current > ($scope.pages.length - nearPagesAmount),
-				pagesAfter = $scope.pages.length - current - 1,
-				offsetBefore = nearOffset,
-				offsetAfter = nearPagesAmount - offsetBefore;
-
-			if ($scope.pages.length <= (nearPagesAmount + 1)) return $scope.pages;
-
-			if (isInStart) {
-				offsetBefore = ((pagesBefore - 1) <= nearOffset) ? pagesBefore : nearOffset;
-				offsetAfter = nearPagesAmount - (offsetBefore);
-			} else
-			if (isInEnd) {
-				offsetAfter = (pagesAfter > (nearOffset + 1)) ? nearOffset : pagesAfter + 1;
-				offsetBefore = nearPagesAmount - offsetAfter;
-			}
-
-			return $scope.pages.slice(current - offsetBefore, current + offsetAfter);
-		};
-
-		$scope.changePage = function (page) {
-			$state.params.offset = ((page - 1) * $state.params.limit);
-			console.log("Page: ", $state.params.offset / $state.params.limit, $scope.pages.length);
+	})
+	.filter("pagination", function (Paginator, Util) {
+		return function (data, limit, offset) {
+			return Paginator.paginate(data.length, limit, offset);
 		};
 	})
 	.controller("Games", function ($scope) {

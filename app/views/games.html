@@ -2,9 +2,6 @@
 Games: {{ (Games.data|state:$state.params.state).length }}
 
 State: {{$state|json}}
-{{state}}
-
-Pages: {{Games.pages|json}}
 </pre>
 
 <div>
@@ -23,55 +20,35 @@ Pages: {{Games.pages|json}}
 	</div>
 </div>
 
-<div ng-controller="Pagination" ng-hide="pages.length == 1">
-	<nav class="pagination">
-		<li
-			ng-if="(nearPages()[0]>1) && (pages.length > 6)"
-			ng-class="{active: $state.params.offset == ( (page - 1) * $state.params.limit) }"
-		>
-			<a ui-sref="games.state({state: $state.params.state, limit: $state.params.limit, offset: 0 })">1</a>
-		</li>
-		<li ng-if="(nearPages()[0]>1) && (pages.length > 6)">
-			<span>...</span>
-		</li>
+<nav class="pagination">
+	<li
+		ng-repeat="page in (Games.data|state:$state.params.state|pagination:$state.params.limit: $state.params.offset)"
+		ng-class="{active: $state.params.offset == Paginator.calcOffset($state.params.limit, page)}"
+	>
+		<a
+			ui-sref="games.state({state: $state.params.state, limit: $state.params.limit, offset: Paginator.calcOffset($state.params.limit, page) })"
+			ng-if="page>0"
+		>{{page}}</a>
+		<span ng-if="page<0">...</span>
+	</li>
+</nav>
 
-		<li
-			ng-repeat="page in nearPages()"
-			ng-class="{active: $state.params.offset == ( (page - 1) * $state.params.limit) }"
-		>
-			<a
-				ui-sref="games.state({state: $state.params.state, limit: $state.params.limit, offset: (page - 1) * $state.params.limit })"
-			>{{page}}</a>
-		</li>
-
-		<li ng-if="((nearPages()|last) !== pages.length) && (pages.length > 6)">
-			<span>...</span>
-		</li>
-		<li
-			ng-if="((nearPages()|last) !== pages.length) && (pages.length > 6)"
-			ng-class="{active: $state.params.offset == ( (page - 1) * $state.params.limit) }"
-		>
-			<a ui-sref="games.state({state: $state.params.state, limit: $state.params.limit, offset: ((pages|last) - 2) * $state.params.limit })">{{pages|last}}</a>
-		</li>
-	</nav>
-
-	<nav class="pagination pull-right">
-		<li
-			ng-repeat="limit in Games.pages.limits"
-			ng-class="{active: limit == $state.params.limit}"
-		>
-			<a
-				ui-sref="games.state({state: $state.params.state, limit: limit, offset: $state.params.offset})"
-			>{{limit}}</a>
-		</li>
-	</nav>
-</div>
+<nav class="pagination pull-right">
+	<li
+		ng-repeat="limit in Paginator.limits"
+		ng-class="{active: limit == $state.params.limit}"
+	>
+		<a
+			ui-sref="games.state({state: $state.params.state, limit: limit, offset: 0})"
+		>{{limit}}</a>
+	</li>
+</nav>
 
 <nav class="list-group">
 	<a
 		ui-sref="game({gameID:game.id})"
 		class="list-group-item"
-		ng-repeat="game in games"
+		ng-repeat="game in (Games.data|state:$state.params.state|page:$state.params.limit:$state.params.offset)"
 	>
 		<i
 			class="glyphicon"
