@@ -1,12 +1,19 @@
-define(function () {
+define([
+	"angular",
+	"angularui",
+	"angularuirouter",
+	"angularbs",
+	"app/paginator",
+	"app/util"
+], function () {
 	angular
-	.module("timer", ["ui", "ui.state", "ui.bootstrap"])
-	.run(function ($rootScope, $state, Games, Game, Paginator) {
-		$rootScope.$state = $state;
-		$rootScope.Games = Games;
-		$rootScope.Game = Game;
-		$rootScope.$watch(Games.watcher, Games.watcherCallback);
-	})
+	.module("timer", [
+		"timer.util",
+		"timer.paginator",
+		"ui",
+		"ui.state",
+		"ui.bootstrap"
+	])
 	.config(function ($stateProvider) {
 		$stateProvider
 		.state("index", {
@@ -31,6 +38,12 @@ define(function () {
 			templateUrl: "views/game.html",
 			controller: "Game"
 		});
+	})
+	.run(function ($rootScope, $state, Games, Game, Paginator) {
+		$rootScope.$state = $state;
+		$rootScope.Games = Games;
+		$rootScope.Game = Game;
+		$rootScope.$watch(Games.watcher, Games.watcherCallback);
 	})
 	.factory("Games", function (Game, Util, $state) {
 		var data = JSON.parse(localStorage.getItem("gamesLog")) || [];
@@ -110,43 +123,6 @@ define(function () {
 			states: ["active", "finished", "dropped", "hold", "wish"]
 		};
 	})
-	.factory("Util", function () {
-		return {
-			sum: function (a, b) {
-				return a + b;
-			},
-			mult: function (a, b) {
-				return a * b;
-			},
-			generateID: function () {
-				return Date.now().toString(36);
-			},
-			pad: function (value) {
-				return (value || 0).toString().length === 1 ? "0" + value : value;
-			},
-			toB64: function (value) {
-				return btoa(unescape(encodeURIComponent(value)));
-			},
-			last: function (array) {
-				if (!array.length) return undefined;
-				return array[array.length - 1];
-			},
-			memoize: function (func) {
-				var memo = {};
-				return function () {
-					var key = JSON.stringify(arguments);
-					return memo[key] ? memo[key] : (memo[key] = func.apply(this, arguments));
-				};
-			},
-			range: function (amount, offset) {
-				return Array(amount)
-				.join(".").split(".")
-				.map(function (value, index) {
-					return index + (offset || 0);
-				});
-			}
-		};
-	})
 	.factory("Session", function () {
 		return {
 			model: {
@@ -161,21 +137,6 @@ define(function () {
 				return angular.extend({}, angular.copy(this.model), defaults, config);
 			}
 		};
-	})
-	.directive("loadFile", function () {
-		var fr = new FileReader();
-
-		return function ($scope, el, attr) {
-			fr.onload = function () {
-				$scope.$eval(attr.loadFile)(fr.result);
-			};
-			el.bind("change", function () {
-				fr.readAsText(el[0].files[0]);
-			});
-		};
-	})
-	.filter("last", function (Util) {
-		return Util.last;
 	})
 	.filter("sumSessionsDuration", function (Util) {
 		return function (sessions) {
@@ -202,23 +163,7 @@ define(function () {
 			return $filter("filter")(games, state !== "all" ? {state: state} : undefined);
 		};
 	})
-	.filter("duration", function (Util) {
-		return function (value) {
-			if (value <= 0) return undefined;
 
-			return ["h","m"]
-			.map(function (part) {
-				switch (part) {
-					case "h":
-						return ~~(value / 3600000);
-					case "m":
-						return ~~((value % 3600000) / 60000);
-				}
-			})
-			.map(Util.pad)
-			.join(":");
-		};
-	})
 	.filter("isPlaying", function () {
 		return function (game) {
 			if (!game.sessions.length) return false;
@@ -226,16 +171,13 @@ define(function () {
 			return game.sessions[game.sessions.length - 1].stop === 0;
 		};
 	})
-	.filter("pages", function (Util) {
-		return function (array, limit, offset) {
-			return Util
-			.range(Math.ceil(array.length / limit))
-			.map(Util.sum.bind(this, 1));
-		};
-	})
-	.controller("Game", function ($scope, $stateParams, $state, $timeout, Games, Game) {
+	.controller("Game", function ($scope, $stateParams, $state, $timeout, Games, Game, Paginator) {
 		var leavePage = function (isRemoved) {
-			if (isRemoved) $state.transitionTo("games");
+			if (isRemoved) $state.transitionTo("games.state", {
+				state: "active",
+				offset: 0,
+				limit: Paginator.limitDefault
+			});
 		};
 		var game = Games.getByID($stateParams.gameID);
 
@@ -248,76 +190,6 @@ define(function () {
 			$scope.timeNow = Date.now();
 			$timeout(updateNow, 10000);
 		})();
-	})
-	.factory("Paginator", function (Util) {
-		var Service = {};
-		return angular.extend(Service, {
-			generatePages: function (length, limit) {
-				return Util
-				.range(Math.ceil(length / limit))
-				.map(Util.sum.bind(null, 1));
-			},
-			calcPage: function (limit, offset) {
-				return Math.ceil(offset / limit) + 1;
-			},
-			calcOffset: function (page, limit) {
-				return (page - 1) * limit;
-			},
-			generatePagination: (function (pages, page) {
-				var caret = this.caret,
-					side = ~~ (caret / 2);
-
-				return pages
-				.map(function (value, index, array) {
-					var isAlwaysVisible = value === 1 || value === array.length,
-						caretCollides =	
-							(value <= caret && page <= caret - side) ||
-							(index + caret >= array.length && page + side >= array.length),
-						isInCaret = page - side <= value && value <= page + side;
-
-					if (isAlwaysVisible || caretCollides || isInCaret) {
-						return value;
-					}
-				})
-				.reduce(function (out, value, index) {
-					var isUnique = out.indexOf(value) < 0,
-						isNotPrevious = !isUnique && Util.last(out) !== value;
-
-					if (isUnique || isNotPrevious) out.push(value);
-					return out;
-				}, [])
-				.map(function (value, index) {
-					return value ? value : -index;
-				});
-			}).bind(Service),
-			paginate: (function (length, limit, offset) {
-				var pages = this.generatePages(length, limit),
-					page = this.calcPage(limit, offset);
-
-				return this.generatePagination(pages, page);
-			}).bind(Service),
-			caret: 5,
-			limitDefault: 25,
-			limits: [25, 50, 100]
-		});
-	})
-	.filter("page", function () {
-		return function (data, limit, offset) {
-			return data.slice(offset, ~~offset + ~~limit);
-		};
-	})
-	.filter("offset", function (Paginator) {
-		return Paginator.calcOffset;
-	})
-	.filter("isCurrentPage", function (Paginator) {
-		return function (page, limit, offset) {
-			return offset == Paginator.calcOffset(page, limit);
-		};
-	})
-	.filter("pagination", function (Paginator) {
-		return function (data, limit, offset) {
-			return Paginator.paginate(data.length, limit, offset);
-		};
 	})
 	.controller("Games", function ($scope) {
 
