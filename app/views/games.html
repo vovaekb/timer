@@ -23,19 +23,19 @@ State: {{$state|json}}
 <nav class="pagination">
 	<li
 		ng-repeat="page in (Games.data|state:$state.params.state|pagination:$state.params.limit: $state.params.offset)"
-		ng-class="{active: $state.params.offset == Paginator.calcOffset($state.params.limit, page)}"
+		ng-class="{active: (page|isCurrentPage:$state.params.limit:$state.params.offset) }"
 	>
 		<a
-			ui-sref="games.state({state: $state.params.state, limit: $state.params.limit, offset: Paginator.calcOffset($state.params.limit, page) })"
-			ng-if="page>0"
+			ui-sref="games.state({state: $state.params.state, limit: $state.params.limit, offset: (page|offset:$state.params.limit) })"
+			ng-if="page > 0"
 		>{{page}}</a>
-		<span ng-if="page<0">...</span>
+		<span ng-if="page < 0">...</span>
 	</li>
 </nav>
 
-<nav class="pagination pull-right">
+<nav class="pagination pull-right" ng-controller="Pagination">
 	<li
-		ng-repeat="limit in Paginator.limits"
+		ng-repeat="limit in limits"
 		ng-class="{active: limit == $state.params.limit}"
 	>
 		<a

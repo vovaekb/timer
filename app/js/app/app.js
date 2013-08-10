@@ -5,7 +5,6 @@ define(function () {
 		$rootScope.$state = $state;
 		$rootScope.Games = Games;
 		$rootScope.Game = Game;
-		$rootScope.Paginator = Paginator;
 		$rootScope.$watch(Games.watcher, Games.watcherCallback);
 	})
 	.config(function ($stateProvider) {
@@ -261,7 +260,7 @@ define(function () {
 			calcPage: function (limit, offset) {
 				return Math.ceil(offset / limit) + 1;
 			},
-			calcOffset: function (limit, page) {
+			calcOffset: function (page, limit) {
 				return (page - 1) * limit;
 			},
 			generatePagination: (function (pages, page) {
@@ -307,6 +306,14 @@ define(function () {
 			return data.slice(offset, ~~offset + ~~limit);
 		};
 	})
+	.filter("offset", function (Paginator) {
+		return Paginator.calcOffset;
+	})
+	.filter("isCurrentPage", function (Paginator) {
+		return function (page, limit, offset) {
+			return offset == Paginator.calcOffset(page, limit);
+		};
+	})
 	.filter("pagination", function (Paginator) {
 		return function (data, limit, offset) {
 			return Paginator.paginate(data.length, limit, offset);
@@ -314,6 +321,9 @@ define(function () {
 	})
 	.controller("Games", function ($scope) {
 
+	})
+	.controller("Pagination", function ($scope, Paginator) {
+		$scope.limits = Paginator.limits;
 	})
 	.controller("GamesAdder", function ($scope, Games) {
 
