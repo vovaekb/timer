@@ -208,4 +208,12 @@ define([
 	});
 
 	angular.bootstrap(document, ["timer"]);
+	var html = document.querySelector("html");
+	html.setAttribute("ng-app", "timer");
+	html.dataset.ngApp = "timer";
+	if (top !== window) {
+		window.parent.postMessage({
+			type: "loadamd"
+		}, "*");
+	}
 });

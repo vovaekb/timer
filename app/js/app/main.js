@@ -10,7 +10,8 @@ require.config({
 	shim: {
 		angularui: ["angular"],
 		angularuirouter: ["angular"],
-		angularbs: ["angular"]
+		angularbs: ["angular"],
+		timer: ["angular", "/_e2e/test/angular-scenario"]
 	}
 });
 
