@@ -11,7 +11,7 @@ define([
 		"timer.util",
 		"timer.paginator",
 		"ui",
-		"ui.state",
+		"ui.router",
 		"ui.bootstrap"
 	])
 	.config(function ($stateProvider) {
