@@ -86,6 +86,11 @@ define([
 				offset: $state.params.offset || 0,
 				limit: $state.params.limit || 25,
 				limits: [25, 50, 100]
+			},
+			lastParams: {
+				state: "all",
+				offset: 0,
+				limit: 25
 			}
 		});
 	})
@@ -191,8 +196,10 @@ define([
 			$timeout(updateNow, 10000);
 		})();
 	})
-	.controller("Games", function ($scope) {
-
+	.controller("Games", function ($scope, Games) {
+		$scope.$on("$stateChangeStart", function (event, toState, toParams, fromState, fromParams) {
+			angular.extend(Games.lastParams, fromParams);
+		});
 	})
 	.controller("Pagination", function ($scope, Paginator) {
 		$scope.limits = Paginator.limits;

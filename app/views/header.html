@@ -2,7 +2,7 @@
 	<a class="navbar-brand" href="#/index">Timer</a>
 	<nav class="nav navbar-nav">
 		<li ng-class="{active: $state.includes('games')}">
-			<a ui-sref="games.state({state: 'active', offset: 0, limit: $state.params.limit})">Games</a>
+			<a ui-sref="games.state(Games.lastParams)">Games</a>
 		</li>
 		<li ng-class="{active: $state.is('settings')}">
 			<a ui-sref="settings">Settings</a>
