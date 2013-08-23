@@ -205,6 +205,16 @@ define([
 	})
 	.controller("Navigation", function ($scope, $stateParams, Games) {
 
+	})
+	.controller("TitleEdit", function ($scope) {
+		$scope.newTitle = "";
+
+		$scope.toggleEditing = function () {
+			$scope.isEditing = !$scope.isEditing;
+		};
+		$scope.setNewTitle = function (value) {
+			$scope.newTitle = value;
+		};
 	});
 
 	angular.bootstrap(document, ["timer"]);

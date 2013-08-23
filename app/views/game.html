@@ -1,4 +1,62 @@
-<h1>{{game.title}}</h1>
+<h1
+	ng-controller="TitleEdit"
+	ui-event="{
+		mouseover: 'showEditButton = true',
+		mouseleave: 'showEditButton = false'
+	}"
+>
+	<span ng-if="!isEditing">
+		{{game.title}}
+		<button
+			ng-show="showEditButton"
+			class="btn btn-default"
+			ng-click="toggleEditing(); setNewTitle(game.title)"
+		>
+			<i class="glyphicon glyphicon-edit"></i>
+		</button>
+	</span>
+	<form
+		ng-if="isEditing"
+		name="titleEdit"
+		ng-submit="game.title = newTitle; toggleEditing()"
+		class="form-inline"
+		ng-class="{
+			'has-error': titleEdit.$invalid,
+			'has-success': titleEdit.$valid && titleEdit.$dirty
+		}"
+	>
+		<div class="form-group">
+			<input
+				type="text"
+				ng-model="newTitle"
+				class="form-control"
+				ui-keyup="{esc: 'toggleEditing()'}"
+				autofocus
+				required
+			>
+		</div>
+		<div class="form-group">
+			<div class="btn-group">
+				<button
+					type="submit"
+					class="btn btn-success"
+					title="Save title"
+					ng-disabled="titleEdit.$invalid"
+				>
+					<i class="glyphicon glyphicon-floppy-save"></i>
+				</button>
+				<button
+					type="reset"
+					class="btn btn-warning"
+					title="Cancel editing"
+					ng-click="toggleEditing()"
+				>
+					<i class="glyphicon glyphicon-floppy-remove"></i>
+				</button>
+			</div>
+		</div>
+	</form>
+</h1>
 <div class="panel form-inline" ng-controller="GameControlPanel">
 	<button
 		class="btn"
