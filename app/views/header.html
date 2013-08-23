@@ -10,7 +10,7 @@
 	</nav>
 	<form
 		class="navbar-form pull-right input-group"
-		ng-cont_roller="GamesAdder"
+		name="newGame"
 		ng-submit="
 			Games.add({title:title});
 			title='';
@@ -29,7 +29,7 @@
 		<span class="input-group-btn">
 			<button
 				type="submit"
-				class="btn btn-primary"
+				class="btn btn-default"
 				ng-disabled="newGame.$invalid"
 			>
 				<i class="glyphicon glyphicon-plus"></i>

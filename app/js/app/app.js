@@ -200,9 +200,6 @@ define([
 	.controller("Pagination", function ($scope, Paginator) {
 		$scope.limits = Paginator.limits;
 	})
-	.controller("GamesAdder", function ($scope, Games) {
-
-	})
 	.controller("GameControlPanel", function ($scope, Game, Games) {
 
 	})
