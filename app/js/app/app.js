@@ -178,11 +178,7 @@ define([
 	})
 	.controller("Game", function ($scope, $stateParams, $state, $timeout, Games, Game, Paginator) {
 		var leavePage = function (isRemoved) {
-			if (isRemoved) $state.transitionTo("games.state", {
-				state: "active",
-				offset: 0,
-				limit: Paginator.limitDefault
-			});
+			if (isRemoved) $state.transitionTo("games.state", Games.lastParams);
 		};
 		var game = Games.getByID($stateParams.gameID);
 
