@@ -115,6 +115,7 @@ define([
 				sessions: []
 			},
 			init: function (game) {
+				if (!game) return;
 				return Object.defineProperties(game, fn);
 			},
 			create: function (config) {
@@ -171,6 +172,7 @@ define([
 
 	.filter("isPlaying", function () {
 		return function (game) {
+			if (!game) return;
 			if (!game.sessions.length) return false;
 
 			return game.sessions[game.sessions.length - 1].stop === 0;
