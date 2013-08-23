@@ -10,6 +10,7 @@
 		<button
 			ng-show="showEditButton"
 			class="btn btn-default"
+			title="Edit title"
 			ng-click="toggleEditing(); setNewTitle(game.title)"
 		>
 			<i class="glyphicon glyphicon-edit"></i>
@@ -19,41 +20,39 @@
 		ng-if="isEditing"
 		name="titleEdit"
 		ng-submit="game.title = newTitle; toggleEditing()"
-		class="form-inline"
+		class="form-inline input-group"
 		ng-class="{
 			'has-error': titleEdit.$invalid,
 			'has-success': titleEdit.$valid && titleEdit.$dirty
 		}"
 	>
-		<div class="form-group">
-			<input
-				type="text"
-				ng-model="newTitle"
-				class="form-control"
-				ui-keyup="{esc: 'toggleEditing()'}"
-				autofocus
-				required
+		<div class="input-group-btn">
+			<button
+				type="submit"
+				class="btn btn-success"
+				title="Save title"
+				ng-disabled="titleEdit.$invalid"
 			>
+				<i class="glyphicon glyphicon-floppy-save"></i>
+			</button>
 		</div>
-		<div class="form-group">
-			<div class="btn-group">
-				<button
-					type="submit"
-					class="btn btn-success"
-					title="Save title"
-					ng-disabled="titleEdit.$invalid"
-				>
-					<i class="glyphicon glyphicon-floppy-save"></i>
-				</button>
-				<button
-					type="reset"
-					class="btn btn-warning"
-					title="Cancel editing"
-					ng-click="toggleEditing()"
-				>
-					<i class="glyphicon glyphicon-floppy-remove"></i>
-				</button>
-			</div>
+		<input
+			type="text"
+			ng-model="newTitle"
+			class="form-control"
+			ui-keyup="{esc: 'toggleEditing()'}"
+			autofocus
+			required
+		>
+		<div class="input-group-btn">
+			<button
+				type="reset"
+				class="btn btn-warning"
+				title="Cancel editing"
+				ng-click="toggleEditing()"
+			>
+				<i class="glyphicon glyphicon-floppy-remove"></i>
+			</button>
 		</div>
 	</form>
 </h1>
