@@ -1,0 +1,98 @@
+<h1
+	ng-controller="TitleEdit"
+	ui-event="{
+		mouseover: 'showEditButton = true',
+		mouseleave: 'showEditButton = false'
+	}"
+>
+	<span ng-if="!isEditing">
+		{{game.title}}
+		<button
+			ng-show="showEditButton"
+			class="btn btn-default"
+			title="Edit title"
+			ng-click="toggleEditing(); setNewTitle(game.title)"
+		>
+			<i class="glyphicon glyphicon-edit"></i>
+		</button>
+	</span>
+	<form
+		ng-if="isEditing"
+		name="titleEdit"
+		ng-submit="game.title = newTitle; toggleEditing()"
+		class="form-inline input-group"
+		ng-class="{
+			'has-error': titleEdit.$invalid,
+			'has-success': titleEdit.$valid && titleEdit.$dirty
+		}"
+	>
+		<div class="input-group-btn">
+			<button
+				type="submit"
+				class="btn btn-success"
+				title="Save title"
+				ng-disabled="titleEdit.$invalid"
+			>
+				<i class="glyphicon glyphicon-floppy-save"></i>
+			</button>
+		</div>
+		<input
+			type="text"
+			ng-model="newTitle"
+			class="form-control"
+			ui-keyup="{esc: 'toggleEditing()'}"
+			autofocus
+			required
+		>
+		<div class="input-group-btn">
+			<button
+				type="reset"
+				class="btn btn-warning"
+				title="Cancel editing"
+				ng-click="toggleEditing()"
+			>
+				<i class="glyphicon glyphicon-floppy-remove"></i>
+			</button>
+		</div>
+	</form>
+</h1>
+<div class="panel form-inline" ng-controller="GameControlPanel">
+	<button
+		class="btn"
+		ng-disabled="game.state !== 'active'"
+		ng-class="{
+			'btn-warning active': (game|isPlaying),
+			'btn-primary': !(game|isPlaying)
+		}"
+		ng-click="(game|isPlaying) ? game.stop() : game.start()"
+	>
+		<i
+			class="glyphicon"
+			ng-class="{
+				'glyphicon-pause': (game|isPlaying),
+				'glyphicon-play': !(game|isPlaying)
+			}"
+		></i>
+	</button>
+	<label>
+		Game state:
+		<select
+			class="form-control"
+			style="width: 150px"
+			ng-model="game.state"
+			ng-options="(state|inflector:'humanize') for state in Game.states"
+		></select>
+	</label>
+	<button class="pull-right btn btn-danger" ng-click="Games.remove(game)">
+		<i class="glyphicon glyphicon-trash"></i>
+	</button>
+</div>
+
+
+<table class="table table-hover table-condensed">
+	<tr ng-repeat="session in (game.sessions|orderBy:'-start')">
+		<td>{{ session.start|date:"MMM d, y HH:mm" }}</td>
+		<td>{{ (session.stop?session.stop:undefined)|date:"MMM d, y HH:mm" }}</td>
+		<td>{{ ((session.stop||timeNow)-session.start)|duration }}</td>
+	</tr>
+</table>

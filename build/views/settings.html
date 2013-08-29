@@ -1,0 +1,26 @@
+<form class="form-horizontal">
+	<div class="form-group">
+		<label for="import" class="col-lg-2 control-label">Import data</label>
+		<div class="col-lg-10">
+			<input
+				type="file"
+				load-file="Games.importData"
+				class="form-control"
+				id="import"
+				style="width: 300px"
+			>
+		</div>
+		<label for="export" class="col-lg-2 control-label">Export data</label>
+		<div class="col-lg-10">
+			<button class="btn btn-default" id="export" ng-click="Games.exportData()">
+				Click to export
+			</button>
+		</div>
+		<label for="clean" class="col-lg-2 control-label">Clean data</label>
+		<div class="col-lg-10">
+			<button class="btn btn-danger" id="export" ng-click="Games.cleanData()">
+				Click to clean
+			</button>
+		</div>
+	</div>
+</form>

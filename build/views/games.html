@@ -1,0 +1,58 @@
+<pre>Duration: {{ Games.data|state:$state.params.state|sumGamesDuration|duration }}
+Games: {{ (Games.data|state:$state.params.state).length }}
+
+State: {{$state|json}}
+</pre>
+
+<div>
+	<div class="btn-group btn-group-justified">
+		<a
+			ui-sref="games.state({state: 'all', offset: 0, limit: $state.params.limit})"
+			class="btn btn-default"
+			ng-class="{active: $state.params.state == 'all'}"
+		>All</a>
+		<a
+			ui-sref="games.state({state:state, offset: 0, limit: $state.params.limit})"
+			class="btn btn-default"
+			ng-class="{active: $state.params.state == state}"
+			ng-repeat="state in Game.states"
+		>{{state|inflector:"humanize"}}</a>
+	</div>
+</div>
+
+<ng-include src="'views/pagination.html'"></ng-include>
+
+<nav class="pagination pull-right" ng-controller="Pagination">
+	<li
+		ng-repeat="limit in limits"
+		ng-class="{active: limit == $state.params.limit}"
+	>
+		<a
+			ui-sref="games.state({state: $state.params.state, limit: limit, offset: 0})"
+		>{{limit}}</a>
+	</li>
+</nav>
+
+<nav class="list-group">
+	<a
+		ui-sref="game({gameID:game.id})"
+		class="list-group-item"
+		ng-repeat="game in (Games.data|state:$state.params.state|orderBy:'-(sessions|last).start'|page:$state.params.limit:$state.params.offset)"
+	>
+		<i
+			class="glyphicon"
+			ng-class="{
+				'glyphicon-pause text-warning': game.state == 'active' && (game|isPlaying),
+				'glyphicon-play': game.state == 'active' && !(game|isPlaying),
+				'glyphicon-ok text-success': game.state == 'finished',
+				'glyphicon-remove text-danger': game.state == 'dropped',
+				'glyphicon-star text-warning': game.state == 'wish',
+				'glyphicon-lock text-muted': game.state == 'hold'
+			}"
+		></i>
+		{{game.title}}
+		<span class="pull-right">{{game.sessions|sumSessionsDuration|duration}}</span>
+	</a>
+</nav>
+
+<ng-include src="'views/pagination.html'"></ng-include>
