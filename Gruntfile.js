@@ -1,23 +1,38 @@
 module.exports = function (grunt) {
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
-		requirejs: {
-			options: {
-				name: 'timer',
-				appDir: 'app/',
-				baseUrl: './js',
-				dir: 'build/',
-				findNestedDependencies: true,
-				mainConfigFile: 'app/js/app/main.js',
-				skipModuleInsertion: true,
-				removeCombined: true
+		dirs: {
+			js: 'app/js',
+			dest: 'build'
+		},
+		files: {
+			app: "<%= dirs.js %>/app/*.js"
+		},
+		concat: {
+			libs: {
+				src: [
+					'<%= dirs.js %>/lib/jquery/*.js',
+					'<%= dirs.js %>/lib/angular/*.js',
+					'<%= dirs.js %>/lib/angular-ui/*.js',
+					'<%= dirs.js %>/lib/angular-ui-router/*.js',
+					'<%= dirs.js %>/lib/angular-bootstrap/*.js'
+				],
+				dest: '<%= dirs.dest %>/libs.js'
 			},
-			build: {
-				optimize: 'none'
+			app: {
+				src: ['<%= files.app %>'],
+				dest: '<%= dirs.dest %>/app.js'
+			}
+		},
+		watch: {
+			app: {
+				files: ['<%= files.app %>'],
+				tasks: ['concat:app']
 			}
 		}
 	});
 
-	grunt.loadNpmTasks('grunt-contrib-requirejs');
-	grunt.registerTask('default', ["requirejs:build"]);
+	grunt.loadNpmTasks('grunt-contrib-concat');
+	grunt.loadNpmTasks('grunt-contrib-watch');
+	grunt.registerTask('default', ["concat"]);
 };
