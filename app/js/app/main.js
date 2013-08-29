@@ -9,9 +9,16 @@ require.config({
 		timer: "app/app"
 	},
 	shim: {
+		angular: {
+			exports: 'angular'
+		},
 		angularui: ["angular", "jquery"],
 		angularuirouter: ["angular"],
-		angularbs: ["angular"]
+		angularbs: ["angular"],
+		timer: {
+			deps: ["angularui", "angularuirouter", "angularbs", "app/util", "app/paginator"]
+		}
+		// timer: ["angularui", "angularuirouter", "angularbs", "app/util", "app/paginator"]
 	}
 });
 
