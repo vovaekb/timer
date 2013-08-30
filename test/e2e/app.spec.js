@@ -1,24 +1,31 @@
-describe("routes", function () {
-	beforeEach(function () {
-		sleep(1);
+describe('basic tests', function () {
+	var p = protractor,
+		i;
+
+	it('should open index', function () {
+		i = p.getInstance();
+		i.get('app/index.html#/index');
+
+		var view = i.findElement(p.By.css('ui-view'));
+
+		expect(view.getText()).toEqual('Wellcome!');
 	});
-	it("navigate to index", function () {
-		browser().navigateTo("/app/index.html");
-		browser().navigateTo("#/index");
-		expect(element("ui-view").text()).toBe("Wellcome!");
+	it('should validate game adding form', function () {
+		var form = i.findElement(p.By.css('.navbar-form'));
+		i.findElement(p.By.input('title')).sendKeys('test');
+		expect(form.getAttribute('class'))
+		.toEqual("navbar-form pull-right input-group ng-dirty ng-valid ng-valid-required");
 	});
-	it("validate game adding form", function () {
-		input("title").enter("Test");
-		expect(element("header form.ng-valid").count()).toEqual(1);
-	});
-	// it("add games", function () {
-	// 	element("header form.ng-valid button").click();
-	// 	sleep(1);
-	// 	expect(browser().location().path()).toEqual("#/game");
-	// });
-	it("redirect to game", function () {
-		browser().navigateTo("#/games");
-		// sleep(10);
-		expect(browser().window().href()).toEqual("/games");
-	});
+	it('should add games', function () {
+		i.findElement(p.By.css('.navbar-form')).submit();
+		setTimeout(function () {
+			expect(i.getCurrentUrl()).toMatch(/#\/games\/\w+$/);
+		}, 5000);
+	}, 10000);
+	it('redirect to games', function () {
+		i.get('app/index.html#/games/');
+		setTimeout(function () {
+			expect(i.getCurrentUrl()).toContain('games/all?offset=0&limit=25');
+		}, 5000);
+	}, 10000);
 });

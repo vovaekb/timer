@@ -1,18 +1,20 @@
-module.exports = function (config) {
-	config.set({
-		basePath: "../",
-		urlRoot: "_karma_",
-		frameworks: ["ng-scenario"],
-		files: ["e2e/*.spec.js"],
-		proxies: {
-			"/": "http://localhost:8001/"
-		},
-		reporters: ["progress"],
-		port: 9876,
-		browsers: ["Chrome"],
-		captureTimeout: 60000,
-		singleRun: true,
-		logLevel: config.LOG_DEBUG/*,
-		autoWatch: true*/
-	});
+// An example configuration file.
+exports.config = {
+  seleniumAddress: 'http://localhost:4444/wd/hub',
+  // seleniumServerJar: './selenium/selenium-server-standalone-2.35.0.jar',
+  // chromeDriver: './selenium/chromedriver',
+
+  capabilities: {
+    'browserName': 'chrome'
+  },
+  seleniumArgs: [],
+
+  baseUrl: 'http://klaster1.github.io/timer/',
+  specs: ['../e2e/*.spec.js'],
+
+  jasmineNodeOpts: {
+    showColors: true,
+    defaultTimeoutInterval: 60000,
+    includeStackTrace: false
+  }
 };
