@@ -24,6 +24,22 @@ module.exports = function (grunt) {
 				dest: '<%= dirs.dest %>/app.js'
 			}
 		},
+		karma: {
+			unit: {
+				options: {
+					frameworks: ['jasmine'],
+					files: [
+						'build/libs.js',
+						'build/app.js',
+						'test/lib/angular-mocks.js',
+						'test/unit/*.spec.js'
+					],
+					browsers: ['Chrome'],
+					reporters: ['progress'],
+					singleRun: true
+				}
+			}
+		},
 		watch: {
 			app: {
 				files: ['<%= files.app %>'],
@@ -34,5 +50,6 @@ module.exports = function (grunt) {
 
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-watch');
+	grunt.loadNpmTasks('grunt-karma');
 	grunt.registerTask('default', ["concat"]);
 };
