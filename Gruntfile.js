@@ -36,7 +36,8 @@ module.exports = function (grunt) {
 					],
 					browsers: ['Chrome'],
 					reporters: ['progress'],
-					singleRun: true
+					singleRun: false,
+					autoWatch: true
 				}
 			}
 		},
@@ -52,4 +53,5 @@ module.exports = function (grunt) {
 	grunt.loadNpmTasks('grunt-contrib-watch');
 	grunt.loadNpmTasks('grunt-karma');
 	grunt.registerTask('default', ["concat"]);
+	grunt.registerTask('unit', ["karma"]);
 };

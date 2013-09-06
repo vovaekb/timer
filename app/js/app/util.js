@@ -28,6 +28,9 @@ angular.module("timer.util", [])
 			};
 		},
 		range: function (amount, offset) {
+			if (angular.isUndefined(amount)) throw new Error("Amount is required");
+			if (amount < 0) throw new Error("Amount should be positive");
+			if (amount === 0) return [];
 			return Array(amount)
 			.join(".").split(".")
 			.map(function (value, index) {
@@ -50,6 +53,7 @@ angular.module("timer.util", [])
 })
 .filter("duration", function (Util) {
 	return function (value) {
+		if (angular.isUndefined(value)) throw new Error("Duration value is required");
 		if (value <= 0) return undefined;
 
 		return ["h","m"]
